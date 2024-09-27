@@ -202,7 +202,7 @@ char* getTimeStamp(char* buffer)
 	gettimeofday(&tv, &tz);
 	tm = localtime(&tv.tv_sec);
  
-	sprintf(buffer, "%d.%d.%d %d:%02d:%02d:%d", 
+	sprintf(buffer, "%d.%d.%d %d:%02d:%02d:%ld", 
 		   tm->tm_year + 1900,
 		   tm->tm_mon + 1,
 		   tm->tm_mday,
