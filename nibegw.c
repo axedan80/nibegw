@@ -381,7 +381,7 @@ void printUsage(char* appname)
  
 int main(int argc, char **argv)
 {
-	char *device = "/dev/ttySO";
+	char *device = "/dev/ttyS0";
 	char *remoteHost = "127.0.0.1";
 	int remotePort = 9999;
 	int localPort4readCmds = 10000;
