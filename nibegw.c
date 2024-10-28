@@ -177,7 +177,7 @@ int initSerialPort(int fd, int hwflowctrl)
 	return 0;
 }
 */ 
-# gamla koden slut
+// gamla koden slut
 
 void printMessage(const unsigned char* const message, int msglen)
 {
