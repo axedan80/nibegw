@@ -130,7 +130,8 @@ int initSerialPort(int fd, int hwflowctrl) {
 
 //slut ny kod
 
-/* Gamla koden start
+/* 
+# Gamla koden start
 int initSerialPort(int fd, int hwflowctrl)
 {
 	struct termios options;
@@ -175,7 +176,8 @@ int initSerialPort(int fd, int hwflowctrl)
 	
 	return 0;
 }
-*/ gamla koden slut
+*/ 
+# gamla koden slut
 
 void printMessage(const unsigned char* const message, int msglen)
 {
