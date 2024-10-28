@@ -93,6 +93,44 @@ void signalCallbackHandler(int signum)
 	exit(1);
 }
 
+//start ny kod
+int initSerialPort(int fd, int hwflowctrl) {
+    struct termios options;
+
+    if (tcgetattr(fd, &options) == -1) {
+        fprintf(stderr, "Failed to get serial port attributes: %s\n", strerror(errno));
+        return -1;
+    }
+
+    // Set baud rate
+    cfsetispeed(&options, B9600);
+    cfsetospeed(&options, B9600);
+
+    // 8N1 mode
+    options.c_cflag &= ~PARENB; // No parity bit
+    options.c_cflag &= ~CSTOPB; // One stop bit
+    options.c_cflag &= ~CSIZE;  // Clear current char size mask
+    options.c_cflag |= CS8;     // 8 bits per byte
+
+    // Disable hardware flow control if needed
+    if (hwflowctrl) {
+        options.c_cflag |= CRTSCTS;
+    } else {
+        options.c_cflag &= ~CRTSCTS;
+    }
+
+    // Apply the options
+    if (tcsetattr(fd, TCSANOW, &options) == -1) {
+        fprintf(stderr, "Failed to set serial port attributes: %s\n", strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
+
+//slut ny kod
+
+/* Gamla koden start
 int initSerialPort(int fd, int hwflowctrl)
 {
 	struct termios options;
@@ -137,6 +175,7 @@ int initSerialPort(int fd, int hwflowctrl)
 	
 	return 0;
 }
+*/ gamla koden slut
 
 void printMessage(const unsigned char* const message, int msglen)
 {
