@@ -91,7 +91,7 @@ int testmode = FALSE;
 int udpPortSetup(int readPort, int writePort);
 int initSerialPort(int fd, int hwflowctrl);
 ssize_t readData(int fildes, void *buf, size_t nbyte);
-#int checkMessage(unsigned char *message, int len); - denna rad verkar finnas på två ställen, se rad 333
+//int checkMessage(unsigned char *message, int len); - denna rad verkar finnas på två ställen, se rad 333
 
 //Funktionsdefinitioner
 int udpPortSetup(int readPort, int writePort) {
