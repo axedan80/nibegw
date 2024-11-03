@@ -87,9 +87,12 @@
 int verbose = 0;
 int testmode = FALSE;
 
+// Funktionsdeklrarationer
 int udpPortSetup(int readPort, int writePort);
+ssize_t readData(int fildes, void *buf, size_t nbyte)
 int initSerialPort(int fd, int hwflowctrl);
 
+//Funktionsdefinitioner
 int udpPortSetup(int readPort, int writePort) {
     int sockfdRead, sockfdWrite;
     struct sockaddr_in serverAddrRead, serverAddrWrite;
@@ -146,11 +149,17 @@ int initSerialPort(int fd, int hwflowctrl) {
     options.c_cflag &= ~CSIZE;
     options.c_cflag |= CS8; // 8 data bits
 
-    // Aktivera mottagare och ställ in lokalt läge
-    options.c_cflag |= (CLOCAL | CREAD);
+    if (hwflowctrl) {
+	    options.c_cflag |= CRTSCTS;
+    } else {
+	    options.c_Cflag &= ~CRTSCTS;
+    }
 
-    // Stäng av hårdvaruflödeskontroll
-    options.c_cflag &= ~CRTSCTS;
+	options.c_iflag &= ~(IXON | IXOFF | IXANY);
+	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+	options.c_oflag &= ~OPOST;
+	
+
 
     // Tillämpa inställningar
     if (tcsetattr(fd, TCSANOW, &options) < 0) {
@@ -244,6 +253,7 @@ char* getTimeStamp(char* buffer)
 }
 
 // ny kod
+//readData definition (innehålls debug-utskrifter)
 ssize_t readData(int fildes, void *buf, size_t nbyte)
 {
     if (testmode)
@@ -502,6 +512,21 @@ int main(int argc, char **argv)
     dest.sin_addr.s_addr = inet_addr(remoteHost);
     dest.sin_port = htons(remotePort);
 
+// Öppna den seriella porten
+	serialport_fd = open(device, O_RDWR | O_NOCTTY);
+	if (serialport_fd < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n", device, strerror(errno)); return 1;
+	} 
+	
+// Initiera den seriella porten
+	if (initSerialPort(serialport_fd, hwflowctrl) == -1) { 
+		fprintf(stderr, "Failed to set serial port: %s\n", strerror(errno)); return 1;
+	
+// Sätt den seriella porten till icke-blockerande läge
+	int flags = fcntl(serialport_fd, F_GETFL, 0);
+	fcntl(serialport_fd, F_SETFL, flags | O_NONBLOCK);
+
+	
     // Anropa udpPortSetup för att binda UDP-portarna
     if (udpPortSetup(localPort4readCmds, localPort4writeCmds) < 0) {
         fprintf(stderr, "Failed to setup UDP ports\n");
@@ -556,78 +581,97 @@ int main(int argc, char **argv)
             int index = 0;
 
             // read all available bytes from serial port
-            while ((len = readData(serialport_fd, buffer, maxdatalen)) > 0)
-            {
-                // go throw all bytes read from serial port
-                for (int i = 0; i < len; i++)
-                {
-                    if (log) printf("\\x%02X", buffer[i]);
 
-                    if (startfound == FALSE)
-                    {
-                        if (verbose) printf("\n%s: ", getTimeStamp(timestamp));
+        while ((len = readData(serialport_fd, buffer, maxdatalen)) > 0) {
+            for (int i = 0; i < len; i++) {
+                if (log) printf("\\x%02X", buffer[i]);
+
+                if (startfound == FALSE) {
+                    if (verbose) printf("\n%s: ", getTimeStamp(timestamp));
+                }
+
+                if (verbose) printf("%02X ", buffer[i]);
+                if (verbose > 3) printf("(%c) ", buffer[i]);
+
+                if (startfound == FALSE && buffer[i] == 0x5C) {
+                    startfound = TRUE;
+                    index = 0;
+                }
+
+                if (startfound) {
+                    if ((index+1) >= maxdatalen) {
+                        // too long message, try to find new start char
+                        startfound = FALSE;
+                    } else {
+                        message[index++] = buffer[i];
+
+                        int msglen = checkMessage(message, index);
+
+                        switch (msglen) {
+                            case 0: // Message ok so far, but not ready
+                                break;
+
+                            case -1: // Invalid message
+                                startfound = FALSE;
+                                break;
+
+                            case -2: // Checksum error
+                                if (message[2] == rs485addr || ackall) {
+                                    if (sendack) sendNak(serialport_fd);
+                                }   
+                                startfound = FALSE;
+                                break;
+
+                            default:
+                                if (verbose > 1) printf("Valid message received, len=%u\n", msglen);
+
+                                if (message[2] == rs485addr || ackall) {
+                                    // send ack to nibe or read/write messages if token received
+                                    int nothingToSend = TRUE;
+
+                                    if (message[3] == 0x69 && message[4] == 0x00) {
+                                        if (verbose > 1) printf("Read token received\n");
+                                        nothingToSend = forwardUdpMsgToSerial(udp_fd, serialport_fd);
+                                    } else if (message[3] == 0x6b && message[4] == 0x00) {
+                                        if (verbose > 1) printf("Write token received\n");
+                                        nothingToSend = forwardUdpMsgToSerial(udp4writeCmds_fd, serialport_fd);
+                                    }
+
+                                    if (nothingToSend) {
+                                        if (verbose > 1) printf("Nothing to send...");
+                                        if (sendack) sendAck(serialport_fd);
+                                    }
+                                }
+
+                                if (message[2] == rs485addr || sendall) {
+                                    // send message to remote
+                                    if (verbose > 1) printf("Send UDP data to %s:%u\n", remoteHost, remotePort);
+                                    if (verbose > 2) printMessage(message, msglen);
+
+                                    if (sendto(udp_fd, message, msglen + 1, 0, (struct sockaddr *)&dest, sizeof(dest)) == -1) {
+                                        fprintf(stderr, "Failed to send udp packet: %s\n", strerror(errno));
+                                    }
+                                }
+
+                                startfound = FALSE;
+                                break;
+                        }   
                     }
+                }
+            }
+        }
 
-                    if (verbose) printf("%02X ", buffer[i]);
-                    if (verbose > 3) printf("(%c) ", buffer[i]);
+        if (len < 0 && errno != EAGAIN) {
+            perror("Read error");
+        }
 
-                    if (startfound == FALSE && buffer[i] == 0x5C)
-                    {
-                        startfound = TRUE;
-                        index = 0;
-                    }
-
-                    if (startfound)
-                    {
-                        if ((index+1) >= maxdatalen)
-                        {
-                            // too long message, try to find new start char
-                            startfound = FALSE;
-                        }
-                        else
-                        {
-                            message[index++] = buffer[i];
-
-                            int msglen = checkMessage(message, index);
-
-                            switch (msglen)
-                            {
-                                case 0: // Message ok so far, but not ready
-                                    break;
-
-                                case -1: // Invalid message
-                                    startfound = FALSE;
-                                    break;
-
-                                case -2: // Checksum error
-                                    if (message[2] == rs485addr || ackall)
-                                    {
-                                        if (sendack) sendNak(serialport_fd);
-                                    }   
-                                    startfound = FALSE;
-                                    break;
-
-                                default:
-                                    if (verbose > 1) printf("Valid message received, len=%u\n", msglen);
-
-                                    if (message[2] == rs485addr || ackall)
-                                    {
-                                        // send ack to nibe or read/write messages if token received
-
-                                        int nothingToSend = TRUE;
-
-                                        if (message[3] == 0x69 && message[4] == 0x00)
-                                        {
-                                            if (verbose > 1) printf("Read token received\n");
-                                            nothingToSend = forwardUdpMsgToSerial(udp_fd, serialport_fd);
-
-}
-				    }
-			    }
-			}
-		    }
-		}
-	    }
-	}
+        sleep(1); // Justera eller ta bort efter behov
     }
+
+    // Stäng alla öppna filer och socketar
+    close(serialport_fd);
+    close(udp_fd);
+    close(udp4writeCmds_fd);
+
+    return 0;
 }
