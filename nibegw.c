@@ -386,8 +386,8 @@ int main(int argc, char **argv)
     char *device = "/dev/ttyS0";
     char *remoteHost = "127.0.0.1";
     int remotePort = 9999;
-    int localPort4readCmds = 10000;
-    int localPort4writeCmds = 10001;
+    int localPort4readCmds = 12000;
+    int localPort4writeCmds = 12001;
     unsigned char rs485addr = 0x20;
     int sendall = FALSE;
     int sendack = TRUE;
