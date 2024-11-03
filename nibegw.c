@@ -93,56 +93,6 @@ void signalCallbackHandler(int signum)
 	exit(1);
 }
 
-
-/*
-# gamla koden
-int initSerialPort(int fd, int hwflowctrl)
-{
-	struct termios options;
-	
-	// Get the current options for the port...
-	tcgetattr(fd, &options);
-	
-	// Set the baud rates
-	cfsetispeed(&options, B9600);
-	cfsetospeed(&options, B9600);
-	
-	// Enable the receiver and set local mode...
-	options.c_cflag |= (CLOCAL | CREAD);
-	
-	// 8 data bits, no parity, 1 stop bit
-	options.c_cflag &= ~PARENB;
-	options.c_cflag &= ~CSTOPB;
-	options.c_cflag &= ~CSIZE;
-	options.c_cflag |= CS8;
-	
-	if (hwflowctrl)
-		options.c_cflag |= CRTSCTS;		// Enable hardware flow control
-	else
-		options.c_cflag &= ~CRTSCTS;	// Disable hardware flow control
-	
-	// Flow control
-	options.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL );
-	
-	// Local flags
-	options.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ECHOCTL | ECHOKE );
-	
-	options.c_oflag &= ~(OPOST | ONLCR);
-	
-	options.c_cc[VMIN] = 1;				// Min character to be read
-	options.c_cc[VTIME] = 1;			// Time to wait for data (tenth of seconds)
-	
-	// Set the new options
-	if (tcsetattr(fd, TCSANOW, &options) < 0 )
-	{
-		return -1;
-	}
-	
-	return 0;
-}
-
-*/
-
 void printMessage(const unsigned char* const message, int msglen)
 {
 	printf("Data: ");
@@ -279,64 +229,8 @@ ssize_t readData(int fildes, void *buf, size_t nbyte)
 
 
 
-/*
-// gammal kod
-ssize_t readData(int fildes, void *buf, size_t nbyte)
-{
-	if (testmode)
-	{
-		unsigned char testdata[] = 
-					/* Junk */
-					"\x01\x02" \
-					
-					/* Frame from MODBUS40 */
-					"\x5C\x00\x20\x6B\x00\x4B" \
-					
-					/* Frame from RMU40 */
-					"\x5C\x00\x19\x60\x00\x79" \
-					
-					/* Frame from RMU40 */
-					"\x5C\x00\x19\x62\x18\x00\x80\x00\x80\x00\x00\x00\x00\x00"
-					"\x80\x00\x00\x00\x00\x00\x0B\x0B\x00\x00\x00\x01\x00\x00"
-					"\x05\xE7" \
-					
-					/* Data frame from MODBUS40 */
-					"\x5C\x00\x20\x68\x50\x01\xA8\x1F\x01\x00\xA8\x64\x00\xFD" \
-					"\xA7\xD0\x03\x44\x9C\x1E\x00\x4F\x9C\xA0\x00\x50\x9C\x78" \
-					"\x00\x51\x9C\x03\x01\x52\x9C\x1B\x01\x87\x9C\x14\x01\x4E" \
-					"\x9C\xC6\x01\x47\x9C\x01\x01\x15\xB9\xB0\xFF\x3A\xB9\x4B" \
-					"\x00\xC9\xAF\x00\x00\x48\x9C\x0D\x01\x4C\x9C\xE7\x00\x4B" \
-					"\x9C\x00\x00\xFF\xFF\x00\x00\xFF\xFF\x00\x00\xFF\xFF\x00" \
-					"\x00\x45" \
-					
-					/* Token Frame from MODBUS40 */
-					"\x5C\x00\x20\x69\x00\x49" \
-					;
-*/
-/*
-// gammal kod
-		int len = sizeof(testdata);
 
-		if (len > nbyte)
-		{
-			fprintf(stderr, "Too much test data, limiting %u to %u\n", len, (unsigned int)nbyte);
-		}
 
-		len = MIN(len, nbyte);
-		memcpy( buf, testdata, len);
-		
-		static int delay = FALSE;
-		if (delay)
-			sleep(2); // slow down little bit after first round
-		
-		delay = TRUE;
-		return len;
-	}
-
-	return read(fildes, buf, nbyte);
-}
-
-*/
 
 /*
  * Return:
@@ -649,4 +543,13 @@ int main(int argc, char **argv)
                                             if (verbose > 1) printf("Read token received\n");
                                             nothingToSend = forwardUdpMsgToSerial(udp_fd, serialport_fd);
 
+}
+				    }
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
 }
