@@ -548,9 +548,9 @@ return 1;
     unsigned char buffer[maxdatalen];
     unsigned char message[maxdatalen];
 
-    for (;;)
-    {
-
+    for (;;) {
+	    printf("Starting read loop ....\n"); // Debug-utskrift
+    
         if (testmode == FALSE && serialport_fd < 0)
         {
             if (strncmp(device, "stdin" , 5) == 0)
@@ -588,6 +588,8 @@ return 1;
             // read all available bytes from serial port
 
         while ((len = readData(serialport_fd, buffer, maxdatalen)) > 0) {
+		printf("Read %xd bytes from serial port\n", len); // Debug-utskrift
+		
             for (int i = 0; i < len; i++) {
                 if (log) printf("\\x%02X", buffer[i]);
 
