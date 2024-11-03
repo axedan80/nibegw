@@ -294,12 +294,14 @@ ssize_t readData(int fildes, void *buf, size_t nbyte)
         return len;
     }
 
+    printf("Attempting to read %zu bytes from fd %d\n", nbyte, fildes);  // Debug-utskrift
     ssize_t bytesRead = read(fildes, buf, nbyte);
     if (bytesRead == -1)
     {
         perror("Failed to read data");
         return -1;
     }
+    printf("Read %ld bytes\n", bytesRead);  // Debug-utskrift
     return bytesRead;
 }
 
