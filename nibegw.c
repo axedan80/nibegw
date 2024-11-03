@@ -89,8 +89,9 @@ int testmode = FALSE;
 
 // Funktionsdeklrarationer
 int udpPortSetup(int readPort, int writePort);
-ssize_t readData(int fildes, void *buf, size_t nbyte)
 int initSerialPort(int fd, int hwflowctrl);
+ssize_t readData(int fildes, void *buf, size_t nbyte);
+int checkMessage(unsigned char *message, int len);
 
 //Funktionsdefinitioner
 int udpPortSetup(int readPort, int writePort) {
@@ -144,6 +145,8 @@ int initSerialPort(int fd, int hwflowctrl) {
     cfsetospeed(&options, B9600);
 
     // Ställ in 8N1 (8 data bits, no parity, 1 stop bit)
+    
+    options.c_cflag |= (CLOCAL | CREAD);
     options.c_cflag &= ~PARENB; // No parity
     options.c_cflag &= ~CSTOPB; // 1 stop bit
     options.c_cflag &= ~CSIZE;
@@ -515,13 +518,15 @@ int main(int argc, char **argv)
 // Öppna den seriella porten
 	serialport_fd = open(device, O_RDWR | O_NOCTTY);
 	if (serialport_fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n", device, strerror(errno)); return 1;
+		fprintf(stderr, "Failed to open %s: %s\n", device, strerror(errno));
+		return 1;
 	} 
 	
 // Initiera den seriella porten
 	if (initSerialPort(serialport_fd, hwflowctrl) == -1) { 
-		fprintf(stderr, "Failed to set serial port: %s\n", strerror(errno)); return 1;
-	
+		fprintf(stderr, "Failed to set serial port: %s\n", strerror(errno));
+return 1;
+	}
 // Sätt den seriella porten till icke-blockerande läge
 	int flags = fcntl(serialport_fd, F_GETFL, 0);
 	fcntl(serialport_fd, F_SETFL, flags | O_NONBLOCK);
