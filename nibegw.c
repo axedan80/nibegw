@@ -87,6 +87,82 @@
 int verbose = 0;
 int testmode = FALSE;
 
+int udpPortSetup(int readPort, int writePort);
+int initSerialPort(int fd, int hwflowctrl);
+
+int udpPortSetup(int readPort, int writePort) {
+    int sockfdRead, sockfdWrite;
+    struct sockaddr_in serverAddrRead, serverAddrWrite;
+
+    // Skapa och binda för läsport
+    sockfdRead = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfdRead < 0) {
+        perror("Failed to create socket for read");
+        return -1;
+    }
+    memset(&serverAddrRead, 0, sizeof(serverAddrRead));
+    serverAddrRead.sin_family = AF_INET;
+    serverAddrRead.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddrRead.sin_port = htons(readPort);
+    if (bind(sockfdRead, (struct sockaddr *)&serverAddrRead, sizeof(serverAddrRead)) < 0) {
+        perror("Failed to bind socket for read");
+        return -1;
+    }
+
+    // Skapa och binda för skrivport
+    sockfdWrite = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfdWrite < 0) {
+        perror("Failed to create socket for write");
+        return -1;
+    }
+    memset(&serverAddrWrite, 0, sizeof(serverAddrWrite));
+    serverAddrWrite.sin_family = AF_INET;
+    serverAddrWrite.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddrWrite.sin_port = htons(writePort);
+    if (bind(sockfdWrite, (struct sockaddr *)&serverAddrWrite, sizeof(serverAddrWrite)) < 0) {
+        perror("Failed to bind socket for write");
+        return -1;
+    }
+
+    return 0;
+}
+
+int initSerialPort(int fd, int hwflowctrl) {
+    struct termios options;
+
+    // Få aktuella inställningar
+    if (tcgetattr(fd, &options) < 0) {
+        perror("Failed to get serial port attributes");
+        return -1;
+    }
+
+    // Ställ in hastighet (9600 baudrate här som exempel)
+    cfsetispeed(&options, B9600);
+    cfsetospeed(&options, B9600);
+
+    // Ställ in 8N1 (8 data bits, no parity, 1 stop bit)
+    options.c_cflag &= ~PARENB; // No parity
+    options.c_cflag &= ~CSTOPB; // 1 stop bit
+    options.c_cflag &= ~CSIZE;
+    options.c_cflag |= CS8; // 8 data bits
+
+    // Aktivera mottagare och ställ in lokalt läge
+    options.c_cflag |= (CLOCAL | CREAD);
+
+    // Stäng av hårdvaruflödeskontroll
+    options.c_cflag &= ~CRTSCTS;
+
+    // Tillämpa inställningar
+    if (tcsetattr(fd, TCSANOW, &options) < 0) {
+        perror("Failed to set serial port attributes");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+
 void signalCallbackHandler(int signum)
 {
 	if (verbose) printf("\nExit...caught by signal %d\n", signum);
