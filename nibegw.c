@@ -158,11 +158,15 @@ int initSerialPort(int fd, int hwflowctrl) {
 	    options.c_cflag &= ~CRTSCTS;
     }
 
-	options.c_iflag &= ~(IXON | IXOFF | IXANY);
-	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-	options.c_oflag &= ~OPOST;
-	
+	//Flow control
+	options.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
 
+	// Local flags
+	options.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ECHOCTL | ECHOKE );
+	options.c_oflag &= ~(OPOST | ONLCR);
+	
+        options.c_cc[VMIN] = 1;				// Min character to be read
+	options.c_cc[VTIME] = 1;			// Time to wait for data (tenth of seconds)
 
     // Tillämpa inställningar
     if (tcsetattr(fd, TCSANOW, &options) < 0) {
