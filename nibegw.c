@@ -87,6 +87,50 @@
 int verbose = 0;
 int testmode = FALSE;
 
+// Funktionsdeklrarationer
+int udpPortSetup(int readPort, int writePort);
+int initSerialPort(int fd, int hwflowctrl);
+ssize_t readData(int fildes, void *buf, size_t nbyte);
+
+//Funktionsdefinitioner
+int udpPortSetup(int readPort, int writePort) {
+    int sockfdRead, sockfdWrite;
+    struct sockaddr_in serverAddrRead, serverAddrWrite;
+
+    // Skapa och binda fÃ¶r lÃ¤sport
+    sockfdRead = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfdRead < 0) {
+        perror("Failed to create socket for read");
+        return -1;
+    }
+    memset(&serverAddrRead, 0, sizeof(serverAddrRead));
+    serverAddrRead.sin_family = AF_INET;
+    serverAddrRead.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddrRead.sin_port = htons(readPort);
+    if (bind(sockfdRead, (struct sockaddr *)&serverAddrRead, sizeof(serverAddrRead)) < 0) {
+        perror("Failed to bind socket for read");
+        return -1;
+    }
+
+    // Skapa och binda fÃ¶r skrivport
+    sockfdWrite = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfdWrite < 0) {
+        perror("Failed to create socket for write");
+        return -1;
+    }
+    memset(&serverAddrWrite, 0, sizeof(serverAddrWrite));
+    serverAddrWrite.sin_family = AF_INET;
+    serverAddrWrite.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddrWrite.sin_port = htons(writePort);
+    if (bind(sockfdWrite, (struct sockaddr *)&serverAddrWrite, sizeof(serverAddrWrite)) < 0) {
+        perror("Failed to bind socket for write");
+        return -1;
+    }
+
+    return 0;
+}
+
+
 void signalCallbackHandler(int signum)
 {
 	if (verbose) printf("\nExit...caught by signal %d\n", signum);
@@ -97,9 +141,11 @@ int initSerialPort(int fd, int hwflowctrl)
 {
 	struct termios options;
 	
-	// Get the current options for the port...
-	tcgetattr(fd, &options);
-	
+// Get the current options for the port...
+    if (tcgetattr(fd, &options) < 0) {
+        perror("Failed to get serial port attributes");
+        return -1;
+    }
 	// Set the baud rates
 	cfsetispeed(&options, B9600);
 	cfsetospeed(&options, B9600);
@@ -130,12 +176,17 @@ int initSerialPort(int fd, int hwflowctrl)
 	options.c_cc[VTIME] = 1;			// Time to wait for data (tenth of seconds)
 	
 	// Set the new options
-	if (tcsetattr(fd, TCSANOW, &options) < 0 )
-	{
-		return -1;
-	}
-	
-	return 0;
+	if (tcsetattr(fd, TCSANOW, &options) < 0) {
+        perror("Failed to set serial port attributes");
+        return -1;
+    }
+
+    return 0;
+}
+void signalCallbackHandler(int signum)
+{
+	if (verbose) printf("\nExit...caught by signal %d\n", signum);
+	exit(1);
 }
 
 void printMessage(const unsigned char* const message, int msglen)
@@ -261,8 +312,15 @@ ssize_t readData(int fildes, void *buf, size_t nbyte)
 		delay = TRUE;
 		return len;
 	}
-
-	return read(fildes, buf, nbyte);
+printf("Attempting to read %zu bytes from fd %d\n", nbyte, fildes);  // Debug-utskrift
+    ssize_t bytesRead = read(fildes, buf, nbyte);
+    if (bytesRead == -1)
+    {
+        perror("Failed to read data");
+        return -1;
+    }
+    printf("Read %ld bytes\n", bytesRead);  // Debug-utskrift
+    return bytesRead;
 }
 
 /*
@@ -472,6 +530,29 @@ int main(int argc, char **argv)
 	server4write.sin_family = AF_INET;
 	server4write.sin_addr.s_addr = htonl(INADDR_ANY);
 	server4write.sin_port = htons(localPort4writeCmds);
+
+	// Oppna den seriella porten - ersätta de 3 styckena ovan enl Co-pilot
+	/*
+	serialport_fd = open(device, O_RDWR | O_NOCTTY);
+	if (serialport_fd < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n", device, strerror(errno));
+		return 1;
+	} 
+	// Initiera den seriella porten
+	if (initSerialPort(serialport_fd, hwflowctrl) == -1) { 
+		fprintf(stderr, "Failed to set serial port: %s\n", strerror(errno));
+return 1;
+	}
+// SÃ¤tt den seriella porten till icke-blockerande lÃ¤ge
+	int flags = fcntl(serialport_fd, F_GETFL, 0);
+	fcntl(serialport_fd, F_SETFL, flags | O_NONBLOCK);
+
+	
+    // Anropa udpPortSetup fÃ¶r att binda UDP-portarna
+    if (udpPortSetup(localPort4readCmds, localPort4writeCmds) < 0) {
+        fprintf(stderr, "Failed to setup UDP ports\n");
+        return 1;
+    } */
 	
 	int maxdatalen = 200;
 	
