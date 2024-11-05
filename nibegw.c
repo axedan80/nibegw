@@ -130,12 +130,13 @@ int udpPortSetup(int readPort, int writePort) {
     return 0;
 }
 
-
+/*
 void signalCallbackHandler(int signum)
 {
 	if (verbose) printf("\nExit...caught by signal %d\n", signum);
 	exit(1);
 }
+*/
 
 int initSerialPort(int fd, int hwflowctrl)
 {
