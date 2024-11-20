@@ -162,7 +162,7 @@ int initSerialPort(int fd, int hwflowctrl) {
 	options.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
 
 	// Local flags
-	options.c_lflag &= ~(ISIG | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ECHOCTL | ECHOKE ); // tar bort ICANON
+	options.c_lflag &= ~(ISIG | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ECHOCTL | ECHOKE | ICANON );
 	options.c_oflag &= ~(OPOST | ONLCR);
 	
         options.c_cc[VMIN] = 1;				// Min character to be read
