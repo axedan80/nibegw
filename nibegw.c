@@ -740,7 +740,7 @@ return 1;
 
 // Stäng alla öppna filer och socketar
 //close(serialport_fd);
-c//lose(udp_fd);
+//close(udp_fd);
 //close(udp4writeCmds_fd);
 
 //return 0;
