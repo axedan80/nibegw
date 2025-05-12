@@ -585,11 +585,13 @@ return 1;
         if (testmode || serialport_fd >= 0)
         {
             char timestamp[80];
-            ssize_t len = 0;
+      //      ssize_t len = 0;
 
             int startfound = FALSE;
             int index = 0;
-
+for (;;) {
+	ssize_t len=0;
+	
             // read all available bytes from serial port
 while ((len = readData(serialport_fd, buffer, maxdatalen)) > 0)
 			{
@@ -720,6 +722,7 @@ while ((len = readData(serialport_fd, buffer, maxdatalen)) > 0)
 			if (log) fflush(stdout);
 
 		}
+	}
 		else
 		{
 			sleep(1);
