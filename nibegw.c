@@ -532,8 +532,8 @@ int main(int argc, char **argv)
 return 1;
 	}
 // SÃ¤tt den seriella porten till icke-blockerande lÃ¤ge (edit har nu satt den i blockerande läge)
-//	int flags = fcntl(serialport_fd, F_GETFL, 0);
-//	fcntl(serialport_fd, F_SETFL, flags | O_NONBLOCK);
+	int flags = fcntl(serialport_fd, F_GETFL, 0);
+	fcntl(serialport_fd, F_SETFL, flags | O_NONBLOCK);
 
 	
     // Anropa udpPortSetup fÃ¶r att binda UDP-portarna
