@@ -591,24 +591,30 @@ return 1;
             int index = 0;
 
             // read all available bytes from serial port
+		while ((len = readData(serialport_fd, buffer, maxdatalen)) > 0)
+			{
+				// go throw all bytes read from serial port
 
+		
+/*
 		// Läs in alla tillgängliga bytes från serieporten
 		while (1) {len = readData(serialport_fd, buffer, maxdatalen);
     			if (len < 0) {
         			fprintf(stderr, "Failed to read data: %s\n", strerror(errno));
         			sleep(1); // Vänta innan nästa försök vid läsfel
-        			continue;
+  	    			continue;
     					}
     			if (len == 0) {
         			fprintf(stderr, "Read 0 bytes, waiting before retrying...\n");
         			sleep(1); // Vänta 1 sekund och försök igen
         			continue;
     					}
-
+*/
 	   // Debug-utskrift – överväg att använda %zd
     		printf("Read %zd bytes from serial port\n", len);
     
-    			for (int i = 0; i < len; i++) {
+    			for (int i = 0; i < len; i++) 
+			{
         			if (log) printf("\\x%02X", buffer[i]);
 
         			if (startfound == FALSE) 
