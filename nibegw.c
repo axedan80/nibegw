@@ -140,9 +140,9 @@ int initSerialPort(int fd, int hwflowctrl) {
         return -1;
     }
 
-    // StÃ¤ll in hastighet (9600 baudrate hÃ¤r som exempel)
-    cfsetispeed(&options, B19200);
-    cfsetospeed(&options, B19200);
+    // StÃ¤ll in hastighet (9600 baudrate hÃ¤r som exempel, nibepi kör B19200)
+    cfsetispeed(&options, B9600);
+    cfsetospeed(&options, B9600);
 
     // StÃ¤ll in 8N1 (8 data bits, no parity, 1 stop bit)
     
