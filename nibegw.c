@@ -218,7 +218,7 @@ int forwardUdpMsgToSerial(int udpfd, int serialfd)
 	if ((udplen = recv(udpfd, udp_packet, MAX_UDP_MSG_SIZE, 0)) > 0)
 	{
 	// Ny debug rad som visar vilken port som tog emot paketet
-		struct socckaddr_in addr;
+		struct sockaddr_in addr;
 		socklen_t addrlen = sizeof(addr);
 		getsockname(udpfd, (struct sockaddr *)&addr, &addrlen);
 		int port = ntohs(addr.sin_port);
