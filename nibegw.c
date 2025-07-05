@@ -220,7 +220,7 @@ int forwardUdpMsgToSerial(int udpfd, int serialfd)
 	// Ny debug rad
 		printf("UDP received (%d bytes): ", udplen);
 		for (int i=0; i<udplen; i++) {
-			Printf("%02X ", udp_packet[i]);
+			printf("%02X ", udp_packet[i]);
 		}
 		printf("\n");
 		
