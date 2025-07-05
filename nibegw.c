@@ -217,6 +217,13 @@ int forwardUdpMsgToSerial(int udpfd, int serialfd)
 	
 	if ((udplen = recv(udpfd, udp_packet, MAX_UDP_MSG_SIZE, 0)) > 0)
 	{
+	// Ny debug rad
+		printf("UDP received (%d bytes): ", udplen);
+		for (int i=0; i<udplen; i++) {
+			Printf("%02X ", udp_packet[i]);
+		}
+		printf("\n");
+		
 		if (verbose > 1) printf("Received UDP message...relay message to serial port\n");
 		if (verbose > 2) printMessage( udp_packet, udplen);
 		
